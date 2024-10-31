@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: junjun-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx  # Ingress 클래스 추가
+  tls:
+  - hosts:
+      - junjun.local
+    secretName: nginx-ssl-secret  # secret 이름 설정
+  rules:
+  - host: junjun.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: junjun-service
+            port:
+              number: 80

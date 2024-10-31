@@ -3,11 +3,13 @@ from django.dispatch import receiver
 from django.conf import settings
 from .models import UserProfile
 
-@receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        UserProfile.objects.create(user=instance)
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
-def save_user_profile(sender, instance, **kwargs):
-    instance.userprofile.save()
+def manage_user_profile(sender, instance, created, **kwargs):
+    if created:
+        if not UserProfile.objects.filter(user=instance).exists():  # 중복 생성 방지
+            UserProfile.objects.create(user=instance)
+    else:
+        # 프로필이 이미 존재하는 경우 저장만 수행
+        if hasattr(instance, "userprofile"):
+            instance.userprofile.save()

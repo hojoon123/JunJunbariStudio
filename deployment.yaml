@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: junjun-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: junjun-app
+  template:
+    metadata:
+      labels:
+        app: junjun-app
+    spec:
+      containers:
+      - name: junjun-container
+        image: hojun5513/junjunbaristudio-web:latest
+        env:
+          - name: DB_HOST
+            valueFrom:
+              secretKeyRef:
+                name: app-secrets
+                key: DB_HOST
+          - name: DB_PORT
+            valueFrom:
+              secretKeyRef:
+                name: app-secrets
+                key: DB_PORT
+          - name: POSTGRES_DB
+            valueFrom:
+              secretKeyRef:
+                name: app-secrets
+                key: POSTGRES_DB
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: app-secrets
+                key: POSTGRES_USER
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: app-secrets
+                key: POSTGRES_PASSWORD
+        ports:
+        - containerPort: 80

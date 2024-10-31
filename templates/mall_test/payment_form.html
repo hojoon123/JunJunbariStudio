@@ -1,0 +1,11 @@
+{% extends "mall_test/base.html" %}
+{% load django_bootstrap5 %}
+{% block content %}
+    <h2>결제하기</h2>
+ 
+    <form action="" method="post" novalidate>
+        {% csrf_token %}
+        {% bootstrap_form form %}
+        <input type="submit" class="btn btn-primary" value="새 결제 만들기" />
+    </form>
+{% endblock %}

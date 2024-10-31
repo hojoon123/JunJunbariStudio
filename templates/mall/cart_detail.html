@@ -1,0 +1,58 @@
+{% extends 'mall/base.html' %}
+{% load humanize %}
+{% load widget_tweaks %}
+
+{% block content %}
+    <h2>장바구니</h2>
+    <form action="" method="post" novalidate>
+        <table class="table table-borderd table-hover">
+            <thead>
+                <tr>
+                    <th>사진</th>
+                    <th>상품명</th>
+                    <th>수량</th>
+                    <th>가격</th>
+                    <th>삭제여부</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% csrf_token %}
+                {{ formset.management_form }}
+                {% for form in formset %}
+                    {% for field in form.hidden_fields %}{{ field }}{% endfor %}
+                    {% with form.instance as cart_product %}
+                        <tr>
+                            <td>
+                                {% if cart_product.product.images.first %}
+                                    <img src="{{ cart_product.product.images.first.image.url }}"
+                                         alt="{{ cart_product.product.name }}"
+                                         class="img-thumbnail"
+                                         style="width: 100px;
+                                                height: 100px">
+                                {% else %}
+                                    <span>이미지 없음</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ cart_product.product.name }} - {{ cart_product.option.name }}</td>
+                            <td>
+                                {% render_field form.quantity class+="form-control text-end" %}
+                                {{ form.quantity.errors }}
+                            </td>
+                            <td>{{ cart_product.total_price|intcomma }}원</td>
+                            <td>{% render_field form.DELETE class+="form-check-input" %}</td>
+                        </tr>
+                    {% endwith %}
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <div class="d-flex mt-3">
+                <h4 class="px-2">
+                    총 가격: <strong>{{ total_price|intcomma }}원</strong>
+                </h4>
+                <input type="submit" class="btn btn-primary py-1" value="장바구니 업데이트">
+            </div>
+            <a href="{% url "order_new" %}" class="btn btn-primary">주문하기</a>
+        </div>
+    </form>
+{% endblock %}

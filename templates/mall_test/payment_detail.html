@@ -1,0 +1,12 @@
+{% extends 'mall_test/base.html' %}
+
+{% block content %}
+    <h2>결제 내역</h2>
+    <ul>
+        <li>결제 상태: {{ payment.get_status_display }}</li>
+        <li>결제 아이디: {{ payment.merchant_uid }}</li>
+        <li>결제명: {{ payment.name }}</li>
+        <li>결제 금액: {{ payment.amount }}</li>
+        <li>{{ payment.is_paid_ok }}</li>
+    </ul>
+{% endblock %}

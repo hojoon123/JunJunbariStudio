@@ -1,0 +1,214 @@
+{% extends "mall/base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block extra-script %}
+    <script src="{% static 'utils/modal.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        const quantitySpan = document.querySelector('#product-quantity');
+        const increaseButton = document.querySelector('#increase-quantity');
+        const decreaseButton = document.querySelector('#decrease-quantity');
+        const productOption = document.querySelector('#product-option');
+    
+        function updatePrice() {
+            const basePrice = parseInt(document.querySelector('#base-price').value, 10);
+            const additionalPrice = parseInt(productOption.options[productOption.selectedIndex].dataset.additionalPrice, 10);
+            const quantity = parseInt(quantitySpan.textContent, 10);
+            const totalPrice = (basePrice + additionalPrice) * quantity;
+    
+            document.querySelector('#total-price').textContent = totalPrice.toLocaleString() + '원';
+        }
+    
+        increaseButton.addEventListener('click', function() {
+            quantitySpan.textContent = parseInt(quantitySpan.textContent) + 1;
+            updatePrice();
+        });
+    
+        decreaseButton.addEventListener('click', function() {
+            if (parseInt(quantitySpan.textContent) > 1) {
+                quantitySpan.textContent = parseInt(quantitySpan.textContent) - 1;
+                updatePrice();
+            }
+        });
+    
+        productOption.addEventListener('change', function() {
+            updatePrice();
+        });
+    
+        // 초기 가격 업데이트
+        updatePrice();
+        });
+    </script>
+{% endblock %}
+
+{% block content %}
+    <!-- Modal -->
+    {% include "mall/modal.html" %}
+ 
+    <div class="container mt-5">
+        <div class="row">
+            <!-- 이미지 및 동영상 섹션 -->
+            <div class="col-md-6">
+                <div id="productCarousel" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        {% for image in images %}
+                            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                <img src="{{ image.image.url }}"
+                                     class="d-block w-100"
+                                     alt="{{ product.name }}">
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <button class="carousel-control-prev"
+                            type="button"
+                            data-bs-target="#productCarousel"
+                            data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next"
+                            type="button"
+                            data-bs-target="#productCarousel"
+                            data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 상품 정보 섹션 -->
+            <div class="col-md-6">
+                <h1 class="display-5">{{ product.name }}</h1>
+                <p class="text-muted">{{ product.category.name }}</p>
+
+                <div class="mb-3">
+                    <label for="product-option" class="form-label">옵션 선택:</label>
+                    <select id="product-option" name="option" class="form-select">
+                        {% for option in product.options.all %}
+                            <option value="{{ option.id }}"
+                                    data-additional-price="{{ option.additional_price }}">
+                                {{ option.name }} (+{{ option.additional_price }}원)
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="product-quantity" class="form-label">수량:</label>
+                    <div class="input-group">
+                        <button type="button"
+                                class="btn btn-outline-secondary rounded-0"
+                                id="decrease-quantity">-</button>
+                        <span id="product-quantity"
+                              class="form-control text-center rounded-0"
+                              style="max-width: 100px">1</span>
+                        <button type="button"
+                                class="btn btn-outline-secondary rounded-0"
+                                id="increase-quantity">+</button>
+                    </div>
+                </div>
+
+                <p>
+                    <strong>Price:</strong> <span id="total-price" class="text-success">{{ product.price|intcomma }}원</span>
+                </p>
+                <input type="hidden" id="base-price" value="{{ product.price }}">
+                <p>
+                    <strong>Status:</strong> {{ product.get_status_display }}
+                </p>
+                <a href="{% url 'add_to_cart' product.pk %}"
+                   data-product-id="{{ product.pk }}"
+                   data-url="{% url 'add_to_cart' product.pk %}"
+                   class="btn btn-primary btn-lg mt-3 cart-button">장바구니에 담기</a>
+            </div>
+        </div>
+
+        <!-- 탭 메뉴 -->
+        <div class="mt-5">
+            <ul class="nav nav-tabs" id="productTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link active"
+                       id="description-tab"
+                       data-bs-toggle="tab"
+                       href="#description"
+                       role="tab"
+                       aria-controls="description"
+                       aria-selected="true">제품 설명</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link"
+                       id="specs-tab"
+                       data-bs-toggle="tab"
+                       href="#specs"
+                       role="tab"
+                       aria-controls="specs"
+                       aria-selected="false">제품 사양</a>
+                </li>
+            </ul>
+
+            <div class="tab-content mt-3" id="productTabContent">
+                <!-- 제품 설명 탭 -->
+                <div class="tab-pane fade show active"
+                     id="description"
+                     role="tabpanel"
+                     aria-labelledby="description-tab">
+                    <p class="lead">{{ product.description|safe }}</p>
+                </div>
+
+                <!-- 제품 사양 탭 -->
+                <div class="tab-pane fade"
+                     id="specs"
+                     role="tabpanel"
+                     aria-labelledby="specs-tab">
+                    <h3>제품 사양</h3>
+                    <table class="table table-bordered">
+                        {% for key, value in product.specifications.items %}
+                            <tr>
+                                <th>{{ key }}</th>
+                                <td>{{ value }}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- PowerPoint 스타일 이미지 섹션 -->
+        <div class="mt-5">
+            <h3>Presentation</h3>
+            {% if product.presentation_image %}
+                <img src="{{ product.presentation_image.url }}"
+                     alt="Presentation Image"
+                     class="img-fluid">
+            {% else %}
+                <img src='{% static "presentation_sample.jpg" %}'
+                     alt="Presentation Image"
+                     class="img-fluid">
+            {% endif %}
+        </div>
+
+        <!-- 사용자 리뷰 섹션 -->
+        <div class="mt-5">
+            <h3>사용자 리뷰</h3>
+            <ul class="list-group">
+                {% for comment in product.comments.all %}
+                    <li class="list-group-item">
+                        <strong>{{ comment.user.username }}</strong>: {{ comment.content }}
+                        <span class="text-muted">- {{ comment.created_at|date:"Y년 m월 d일 H:i" }}</span>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item">아직 작성된 댓글이 없습니다.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- 댓글 작성 폼 섹션 -->
+        <div class="mt-4">
+            <form action="{% url 'add_comment' product.pk %}" method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary">입력하기</button>
+            </form>
+        </div>
+    </div>
+{% endblock %}

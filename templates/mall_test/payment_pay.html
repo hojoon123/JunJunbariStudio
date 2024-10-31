@@ -1,0 +1,42 @@
+{% extends "mall_test/base.html" %}
+
+{% block content %}
+	
+    <h2>결제하기</h2>
+ 
+    {{ payment_props | json_script:"payment-props" }}
+ 
+    <script>window.PAYMENT_CHECK_URL = "{{ payment_check_url }}";</script>
+    <script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
+    <script>(async function (){
+          const portOne = window.PortOne;
+          const code = "{{ portone_shop_id }}";
+
+          const json_string = document.querySelector("#payment-props").textContent;
+          const props = JSON.parse(json_string);
+
+          try {
+              const response = await portOne.requestPayment({
+                  storeId: code,
+                  channelKey: "channel-key-8f04fa1e-3c2f-49d4-bcb7-651f8d273076",
+                  paymentId: props.merchant_uid, // Unique payment ID
+                  orderName: props.name, // 주문 이름
+                  totalAmount: props.amount, // 결제 금액
+                  currency: "KRW", // 통화 타입 (예: KRW)
+                  payMethod: "CARD", // 결제 수단 (예: 카드 결제)
+              });
+
+              // 결제 성공 또는 실패 응답 처리
+              if (response.code != null) {
+                  alert(`결제 실패: ${response.message}`);
+                  console.log(props.name, props.amount, props.merchant_uid, code);
+              } else {
+                  location.href = window.PAYMENT_CHECK_URL;
+              }
+          } catch (error) {
+              console.error("결제 요청 중 오류 발생:", error);
+              alert("결제를 처리하는 동안 오류가 발생했습니다.");
+          }
+      })();
+    </script>
+{% endblock %}

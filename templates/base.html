@@ -1,10 +1,95 @@
+{% load django_bootstrap5 %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport"
+              content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>준준바리 스튜디오</title>
+        {% bootstrap_css %}
+        {% bootstrap_javascript %}
+        <link rel="stylesheet"
+              href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    </head>
+    <body>
+        <header class="p-3 mb-3 border-bottom">
+            <div class="container">
+                <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+                    <a href="{% url 'root' %}"
+                       class="d-flex align-items-center mb-2 mb-lg-0 link-body-emphasis text-decoration-none fw-bold pe-4">
+                        준준바리 스튜디오
+                    </a>
 
-</body>
+                    <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
+                        <li>
+                            <a href="{% url 'product_list' %}"
+                               class="nav-link px-2 link-body-emphasis">몰</a>
+                        </li>
+
+                    </ul>
+
+                    <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3"
+                          role="search"
+                          action=""
+                          method="get">
+                        <input type="search"
+                               class="form-control"
+                               placeholder="Search..."
+                               aria-label="Search"
+                               name="query"
+                               value="{{ request.GET.query }}">
+                    </form>
+
+                    {% if not user.is_authenticated %}
+                        <a href="{% url 'login' %}" class="nav-link link-body-emphasis px-2">로그인</a>
+                        <a href="{% url 'signup' %}" class="nav-link link-body-emphasis px-3">회원가입</a>
+                    {% else %}
+                        <div>
+                            <a class="dropdown-item p-4" href="{% url 'cart_detail' %}">
+                                <i class="fas fa-shopping-cart"></i>
+                            </a>
+                        </div>
+                        <div class="dropdown text-end">
+                            <a href="#"
+                               class="d-block link-body-emphasis text-decoration-none dropdown-toggle"
+                               data-bs-toggle="dropdown"
+                               aria-expanded="false">
+                                <img src="https://github.com/mdo.png"
+                                     alt="mdo"
+                                     width="32"
+                                     height="32"
+                                     class="rounded-circle">
+                            </a>
+                            <ul class="dropdown-menu text-small" style="">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'profile' %}">마이페이지</a>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
+                                    <form method="post" action="{% url 'logout' %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="dropdown-item">로그아웃</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            {% bootstrap_messages %}
+            {% block content %}{% endblock %}
+            <hr />
+            &copy; 2023. All rights reserved.
+        </div>
+        <script>window.csrf_token = "{{ csrf_token }}";</script>
+        <script src="{% static "utils/alert-mdoal.js" %}"></script>
+        {% block extra-script %}{% endblock %}
+    </body>
 </html>

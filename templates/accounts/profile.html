@@ -1,0 +1,10 @@
+{% extends "accounts/base.html" %}
+{% load django_bootstrap5 %}
+{% block content %}
+    <h2>{{ user }}'s 마이페이지</h2>
+    <ul>
+        <li>이름: {{ user.first_name }} {{ user.last_name }}</li>
+        <li>이메일: {{ user.email }}</li>
+    </ul>
+    <a href="{% url 'order_list' %}" class="btn btn-primary mt-3">주문 목록 보기</a>
+{% endblock %}

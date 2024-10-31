@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-master
+spec:
+  replicas: 1  # 마스터 Postgres의 복제본 수는 1로 설정
+  selector:
+    matchLabels:
+      app: postgres-master
+  template:
+    metadata:
+      labels:
+        app: postgres-master
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16  # Postgres 16 버전 이미지 사용
+        env:
+        # 데이터베이스 이름, 사용자, 비밀번호는 secrets에서 가져옴
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret  # secrets에서 POSTGRES_DB 키 가져오기
+              key: POSTGRES_DB
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret  # secrets에서 POSTGRES_USER 키 가져오기
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret  # secrets에서 POSTGRES_PASSWORD 키 가져오기
+              key: POSTGRES_PASSWORD
+        - name: PGDATA
+          value: "/var/lib/postgresql/data/pgdata"  # Postgres 데이터 저장 경로 지정
+        ports:
+        - containerPort: 5432  # Postgres 기본 포트 (5432)로 설정
+        volumeMounts:
+        # 데이터 영구 저장을 위한 볼륨 마운트
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        # 사용자 정의 설정 파일 마운트
+        - name: postgres-config
+          mountPath: /etc/postgresql/postgresql.conf  # 메인 설정 파일 경로
+          subPath: postgresql.conf
+        - name: postgres-config
+          mountPath: /etc/postgresql/pg_hba.conf  # 클라이언트 인증 파일 경로
+          subPath: pg_hba.conf
+
+      # Redis 사이드카 컨테이너 추가
+      - name: redis
+        image: redis:latest  # 최신 Redis 이미지 사용
+        ports:
+        - containerPort: 6379  # Redis의 기본 포트는 6379
+        volumeMounts:
+        - name: redis-storage
+          mountPath: /data  # 임시 데이터 저장용 볼륨 (emptyDir)
+
+      # PersistentVolume과 ConfigMap에 연결할 볼륨 정의
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-pv-claim  # 영구 저장을 위한 볼륨 클레임 참조
+      - name: postgres-config
+        configMap:
+          name: postgres-config  # 사용자 정의 ConfigMap으로 Postgres 설정 파일 로드
+      - name: redis-storage
+        emptyDir: {}  # Redis 임시 데이터를 저장할 비영구 디렉토리
+
+# Postgres 접근용 내부 Service 정의
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-master-service
+spec:
+  selector:
+    app: postgres-master
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432  # Postgres의 기본 포트
+  type: LoadBalancer  # 외부에서 접근 가능한 LoadBalancer 타입
+
+# Redis 접근용 내부 Service 정의
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+spec:
+  selector:
+    app: postgres-master  # 동일한 배포의 라벨을 참조
+  ports:
+    - protocol: TCP
+      port: 6379
+      targetPort: 6379  # Redis의 기본 포트
+  type: LoadBalancer  # 외부에서 접근 가능한 LoadBalancer 타입
