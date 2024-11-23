@@ -84,6 +84,7 @@ class LoginView(APIView):
                 key="access_token",
                 value=access_token,
                 httponly=True,
+                domain="jjbs-fe-enzg.vercel.app",
                 secure=True,  # HTTPS에서만 전송 로컬
                 samesite="None",  # CSRF 방지
                 max_age=60 * 30,  # 쿠키 만료 시간 (30분)
@@ -94,6 +95,7 @@ class LoginView(APIView):
                 key="refresh_token",
                 value=str(refresh),
                 httponly=True,
+                domain="jjbs-fe-enzg.vercel.app",
                 secure=True,
                 samesite="None",
                 max_age=7 * 24 * 60 * 60,  # 쿠키 만료 시간 (1주일)
