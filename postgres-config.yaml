@@ -10,5 +10,5 @@ data:
     listen_addresses = '*'
     port = 5432
   pg_hba.conf: |
-    local   all             all                                     peer
-    host    all             all             0.0.0.0/0               md5
+    local   all             all                                     scram-sha-256
+    host    all             all             0.0.0.0/0               scram-sha-256

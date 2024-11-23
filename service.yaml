@@ -3,10 +3,10 @@ kind: Service
 metadata:
   name: junjun-service
 spec:
+  type: ClusterIP  # ClusterIP 설정
   selector:
     app: junjun-app
   ports:
-  - protocol: TCP
-    port: 80  # 외부에서 접근할 포트
-    targetPort: 80  # 컨테이너 내부에서 사용하는 포트
-  type: ClusterIP
+    - protocol: TCP
+      port: 80          # 서비스가 노출하는 포트
+      targetPort: 80    # Pod에서 사용하는 포트

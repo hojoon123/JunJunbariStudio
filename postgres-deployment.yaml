@@ -6,15 +6,15 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: postgres-master
+      app: postgres
   template:
     metadata:
       labels:
-        app: postgres-master
+        app: postgres
     spec:
       containers:
       - name: postgres
-        image: postgres:13
+        image: postgres:16
         env:
         - name: POSTGRES_DB
           valueFrom:
@@ -51,3 +51,17 @@ spec:
       - name: postgres-config
         configMap:
           name: postgres-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-master-service
+spec:
+  selector:
+    app: postgres
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+  type: ClusterIP  # Ingress를 통해 외부로 노출할 것이므로 LoadBalancer에서 ClusterIP로 변경

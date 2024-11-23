@@ -8,6 +8,8 @@ load_dotenv()
 
 # BASE_DIR 설정
 BASE_DIR = Path(__file__).resolve().parent.parent
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
 
 # 기본 설정
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key")
@@ -20,7 +22,10 @@ INTERNAL_IPS = os.getenv("INTERNAL_IPS", "127.0.0.1").split(",")
 CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "").split(",")
 CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
 ALLOWED_WEBHOOK_IPS = os.getenv("ALLOWED_WEBHOOK_IPS", "").split(",")
-print(f"CSRF_TRUSTED_ORIGINS: {os.getenv('CSRF_TRUSTED_ORIGINS')}")
+
+# CIDR 범위 추가
+ALLOWED_CIDR_NETS = ['10.124.0.0/16']  # Kubernetes 클러스터의 내부 IP 대역
+
 # 데이터베이스 설정
 DATABASES = {
     "default": {
@@ -75,7 +80,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "JunJunbariStudio.middleware.JWTAuthenticationMiddleware"
+    "JunJunbariStudio.middleware.JWTAuthenticationMiddleware",
+    "allow_cidr.middleware.AllowCIDRMiddleware",
 ]
 
 ROOT_URLCONF = "JunJunbariStudio.urls"
@@ -153,5 +159,36 @@ CKEDITOR_UPLOAD_PATH = "uploads/"
 CKEDITOR_5_CONFIGS = {
     "default": {
         "toolbar": ["heading", "|", "bold", "italic", "link", "bulletedList", "numberedList", "blockQuote", "imageUpload"],
+    },
+}
+
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "{levelname} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "file": {
+            "level": "DEBUG",
+            "class": "logging.FileHandler",
+            "filename": os.path.join(BASE_DIR, "logs/debug.log"),
+            "formatter": "verbose",
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["file"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
     },
 }

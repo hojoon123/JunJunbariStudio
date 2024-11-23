@@ -31,6 +31,7 @@ from .serializers import (
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 from mall.tasks import cancel_payment
+from django.http import HttpResponse
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
@@ -499,3 +500,5 @@ class OrderPaymentViewSet(viewsets.ModelViewSet):
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+

@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: junjun-deployment
 spec:
-  replicas: 2
+  replicas: 2  # 어플리케이션 Pod 수
   selector:
     matchLabels:
       app: junjun-app
@@ -15,6 +15,8 @@ spec:
       containers:
       - name: junjun-container
         image: hojun5513/junjunbaristudio-web:latest
+        ports:
+        - containerPort: 80
         env:
           - name: DB_HOST
             valueFrom:
@@ -41,5 +43,25 @@ spec:
               secretKeyRef:
                 name: app-secrets
                 key: POSTGRES_PASSWORD
-        ports:
-        - containerPort: 80
+          - name: REDIS_HOST
+            valueFrom:
+              secretKeyRef:
+                name: app-secrets
+                key: REDIS_HOST
+          - name: REDIS_PORT
+            valueFrom:
+              secretKeyRef:
+                name: app-secrets
+                key: REDIS_PORT
+        readinessProbe:
+          httpGet:
+            path: /health-check
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health-check
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 20

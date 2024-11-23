@@ -23,4 +23,4 @@ ENV PYTHONUNBUFFERED 1
 EXPOSE 8000
 
 # 애플리케이션 실행 명령어
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:80"]
