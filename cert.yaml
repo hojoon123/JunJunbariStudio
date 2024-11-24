@@ -1,7 +1,7 @@
 apiVersion: networking.gke.io/v1
 kind: ManagedCertificate
 metadata:
-  name: junjun-cert
+  name: junjun-cert-api
 spec:
   domains:
-  - "mnuguide.site"  # 도메인
+  - "api.mnuguide.site"  # 서브도메인만 포함
