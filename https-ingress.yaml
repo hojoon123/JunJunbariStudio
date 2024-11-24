@@ -13,7 +13,7 @@ spec:
     http:
       paths:
       - path: /
-        pathType: ImplementationSpecific
+        pathType: Prefix
         backend:
           service:
             name: junjun-service                                  # 기존 백엔드 서비스 이름 유지
