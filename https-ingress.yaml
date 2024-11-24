@@ -4,7 +4,7 @@ metadata:
   name: junjun-ingress
   annotations:
     kubernetes.io/ingress.class: "gce"                            # GCP Ingress 사용
-    networking.gke.io/managed-certificates: "junjun-cert"         # ManagedCertificate 연결
+    networking.gke.io/managed-certificates: "junjun-cert-api"         # ManagedCertificate 연결
     kubernetes.io/ingress.global-static-ip-name: "junjun-static-ip"  # 고정 IP 사용
     ingress.kubernetes.io/force-ssl-redirect: "true"              # HTTP -> HTTPS 리다이렉트 강제
 spec:
