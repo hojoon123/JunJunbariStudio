@@ -1,6 +1,8 @@
 from django.contrib.auth import authenticate, login, get_user_model, logout
 from django.db import IntegrityError, transaction
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework.exceptions import ValidationError
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -9,6 +11,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated, BasePermission, AllowAny
 from rest_framework.decorators import action
 from .models import LoginHistory
+from .permissions import DebugAuthentication
 from .serializers import UserSerializer
 
 
@@ -88,6 +91,7 @@ class LoginView(APIView):
                 samesite="None",  # CSRF 방지
                 max_age=60 * 30,  # 쿠키 만료 시간 (30분)
                 path="/",
+                domain=".mnuguide.site",
             )
 
             # refresh_token도 HttpOnly 쿠키에 저장
@@ -99,7 +103,12 @@ class LoginView(APIView):
                 samesite="None",
                 max_age=7 * 24 * 60 * 60,  # 쿠키 만료 시간 (1주일)
                 path="/",
+                domain=".mnuguide.site",
             )
+
+            # 디버깅용 print
+            print(f"[DEBUG] Set-Cookie: access_token={access_token}")
+            print(f"[DEBUG] Set-Cookie: refresh_token={str(refresh)}")
 
             return response
 
@@ -137,8 +146,10 @@ class LogoutView(APIView):
 
             # 리프레시 토큰과 액세스 토큰 쿠키 제거
             response = Response({"message": "로그아웃 성공"}, status=status.HTTP_200_OK)
-            response.delete_cookie("access_token")
-            response.delete_cookie("refresh_token")
+            response.delete_cookie("access_token", domain=".mnuguide.site", path="/")
+            response.delete_cookie("refresh_token", domain=".mnuguide.site", path="/")
+            print("[DEBUG] Called response.delete_cookie for access_token")
+            print("[DEBUG] Called response.delete_cookie for refresh_token")
 
             return response
         except Exception as e:
@@ -159,8 +170,13 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
+        # 현재 로그인한 유저만 반환
+        user = self.request.user
+
         # 현재 로그인한 유저만 정보를 수정 또는 삭제할 수 있게 설정
-        return self.request.user
+        print(f"[DEBUG] GET /users/me/ accessed by user: {user.id} - {user.email}")
+        print(user)
+        return user
 
 
     def delete(self, request, *args, **kwargs):
@@ -182,6 +198,7 @@ class HasSubscriptionAccess(BasePermission):
 
 
 # 특정 서비스 제공 ViewSet - 구독 권한에 따른 그거 설정 돈 낸 사람만 좋은 기능 열어주기 할 떄 이거 걸기
+@method_decorator(csrf_exempt, name='dispatch')
 class SomeServiceViewSet(viewsets.ViewSet):
     permission_classes = [
         IsAuthenticated,

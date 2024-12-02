@@ -3,19 +3,24 @@ kind: Ingress
 metadata:
   name: junjun-ingress
   annotations:
-    kubernetes.io/ingress.class: "gce"                            # GCP Ingress 사용
-    networking.gke.io/managed-certificates: "junjun-cert-api"         # ManagedCertificate 연결
+    kubernetes.io/ingress.class: "gce"                                # GCP Ingress 사용
+    networking.gke.io/managed-certificates: "junjun-cert-api"        # ManagedCertificate 연결
     kubernetes.io/ingress.global-static-ip-name: "junjun-static-ip"  # 고정 IP 사용
-    ingress.kubernetes.io/force-ssl-redirect: "true"              # HTTP -> HTTPS 리다이렉트 강제
+    ingress.kubernetes.io/force-ssl-redirect: "true"                # HTTP -> HTTPS 리다이렉트 강제
+    ingress.kubernetes.io/secure-backends: "true"                   # HTTPS 백엔드 사용
+    ingress.kubernetes.io/proxy-body-size: "16m"                    # 요청 본문 크기 제한 증가
+    ingress.kubernetes.io/proxy-buffer-size: "16k"                  # 버퍼 크기 증가
+    nginx.ingress.kubernetes.io/proxy-cookie-domain: ".mnuguide.site"
+    nginx.ingress.kubernetes.io/proxy-cookie-path: "/ /"
 spec:
   rules:
-  - host: api.mnuguide.site                                       # 서브도메인으로 변경
+  - host: api.mnuguide.site                                         # 서브도메인
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: junjun-service                                  # 기존 백엔드 서비스 이름 유지
+            name: junjun-service                                    # 기존 백엔드 서비스 이름
             port:
               number: 80

@@ -22,6 +22,16 @@ INTERNAL_IPS = os.getenv("INTERNAL_IPS", "127.0.0.1").split(",")
 CORS_ALLOWED_ORIGINS = os.getenv("CORS_ALLOWED_ORIGINS", "").split(",")
 CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
 ALLOWED_WEBHOOK_IPS = os.getenv("ALLOWED_WEBHOOK_IPS", "").split(",")
+CSRF_COOKIE_DOMAIN = os.getenv("CSRF_COOKIE_DOMAIN", "")
+# CORS 및 CSRF 설정
+CORS_ALLOW_METHODS = ["DELETE", "GET", "OPTIONS", "PATCH", "POST", "PUT"]
+CORS_ALLOW_CREDENTIALS = True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_DOMAIN = ".mnuguide.site"
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = "None"
+# SSL 및 프록시 설정 GCP ingress 혹은 ngnix 등 리버스 프록시 환경에서 반드시 필수
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')  # HTTPS를 프록시 통해 감지
 
 # CIDR 범위 추가
 ALLOWED_CIDR_NETS = ['10.124.0.0/16']  # Kubernetes 클러스터의 내부 IP 대역
@@ -72,15 +82,15 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
+    #"JunJunbariStudio.middleware.JWTAuthenticationMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "JunJunbariStudio.middleware.JWTAuthenticationMiddleware",
     "allow_cidr.middleware.AllowCIDRMiddleware",
 ]
 
@@ -128,10 +138,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Django Debug Toolbar
 INTERNAL_IPS = os.getenv("INTERNAL_IPS", "127.0.0.1").split(",")
 
-# CORS 및 CSRF 설정
-CORS_ALLOW_METHODS = ["DELETE", "GET", "OPTIONS", "PATCH", "POST", "PUT"]
-CORS_ALLOW_CREDENTIALS = True
-
 # JWT 설정
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
@@ -149,7 +155,9 @@ SIMPLE_JWT = {
 
 # Django REST Framework 설정
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",),
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "users.authentication.CustomJWTAuthentication",  # 커스텀 인증 클래스
+    ),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
 }
@@ -163,32 +171,37 @@ CKEDITOR_5_CONFIGS = {
 }
 
 
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "verbose": {
-            "format": "{levelname} {asctime} {module} {message}",
-            "style": "{",
-        },
-        "simple": {
-            "format": "{levelname} {message}",
-            "style": "{",
-        },
-    },
-    "handlers": {
-        "file": {
-            "level": "DEBUG",
-            "class": "logging.FileHandler",
-            "filename": os.path.join(BASE_DIR, "logs/debug.log"),
-            "formatter": "verbose",
-        },
-    },
-    "loggers": {
-        "django": {
-            "handlers": ["file"],
-            "level": "DEBUG",
-            "propagate": True,
-        },
-    },
-}
+# LOGGING = {
+#     "version": 1,
+#     "disable_existing_loggers": False,
+#     "formatters": {
+#         "verbose": {
+#             "format": "{levelname} {asctime} {module} {message}",
+#             "style": "{",
+#         },
+#         "simple": {
+#             "format": "{levelname} {message}",
+#             "style": "{",
+#         },
+#     },
+#     "handlers": {
+#         "file": {
+#             "level": "DEBUG",
+#             "class": "logging.FileHandler",
+#             "filename": os.path.join(BASE_DIR, "logs/debug.log"),
+#             "formatter": "verbose",
+#         },
+#         "console": {
+#             "level": "DEBUG",
+#             "class": "logging.StreamHandler",
+#             "formatter": "simple",
+#         },
+#     },
+#     "loggers": {
+#         "django": {
+#             "handlers": ["file", "console"],
+#             "level": "DEBUG",
+#             "propagate": True,
+#         },
+#     },
+# }
