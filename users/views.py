@@ -7,9 +7,12 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, viewsets, generics
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated, BasePermission, AllowAny
 from rest_framework.decorators import action
+from rest_framework_simplejwt.views import TokenRefreshView
+
 from .models import LoginHistory
 from .permissions import DebugAuthentication
 from .serializers import UserSerializer
@@ -18,6 +21,60 @@ from .serializers import UserSerializer
 # 현재 프로젝트에서 사용 중인 유저 모델을 가져옵니다.
 User = get_user_model()
 
+class CustomTokenRefreshView(TokenRefreshView):
+    """
+    커스텀 TokenRefreshView: 갱신된 Access Token과 Refresh Token을 쿠키에 설정
+    """
+    serializer_class = TokenRefreshSerializer
+
+    def post(self, request, *args, **kwargs):
+        # 기존 TokenRefreshView 로직을 가져옴
+        serializer = self.get_serializer(data=request.data)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+        except Exception as e:
+            return Response({"error": "Token 갱신 실패", "details": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 갱신된 토큰 가져오기
+        access_token = serializer.validated_data.get("access")
+        refresh_token = serializer.validated_data.get("refresh")  # Optional: 새 Refresh Token
+
+        response = Response(
+            {"message": "토큰 갱신 성공", "access": access_token},
+            status=status.HTTP_200_OK,
+        )
+
+        # Access Token을 쿠키에 저장
+        response.set_cookie(
+            key="access_token",
+            value=access_token,
+            httponly=True,
+            secure=True,  # HTTPS에서만 전송
+            samesite="None",  # 크로스-도메인 허용
+            max_age=60 * 30,  # 쿠키 만료 시간: 30분
+            path="/",
+            domain=".mnuguide.site",
+        )
+
+        # Refresh Token도 쿠키에 저장 (선택 사항)
+        if refresh_token:
+            response.set_cookie(
+                key="refresh_token",
+                value=refresh_token,
+                httponly=True,
+                secure=True,
+                samesite="None",
+                max_age=7 * 24 * 60 * 60,  # 쿠키 만료 시간: 7일
+                path="/",
+                domain=".mnuguide.site",
+            )
+
+        print(f"[DEBUG] 새 Access Token: {access_token}")
+        if refresh_token:
+            print(f"[DEBUG] 새 Refresh Token: {refresh_token}")
+
+        return response
 
 # 회원가입
 class RegisterView(APIView):

@@ -6,9 +6,9 @@ from .views import (
     UpdateSubscriptionView,
     SomeServiceViewSet,
     UserListView,
-    UserDetailView,
+    UserDetailView, CustomTokenRefreshView,
 )
-from rest_framework_simplejwt.views import TokenRefreshView
+
 
 urlpatterns = [
     path("register/", RegisterView.as_view(), name="register"),  # 회원가입
@@ -29,5 +29,5 @@ urlpatterns = [
     path(
         "me/", UserDetailView.as_view(), name="user-detail"
     ),  # 유저 정보 조회, 수정, 탈퇴
-    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # token refresh
+    path('token/refresh/', CustomTokenRefreshView.as_view(), name='token_refresh'),  # token refresh
 ]
